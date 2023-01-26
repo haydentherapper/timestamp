@@ -12,10 +12,10 @@ import (
 type request struct {
 	Version        int
 	MessageImprint messageImprint
-	ReqPolicy      asn1.ObjectIdentifier `asn1:"optional"`
-	Nonce          *big.Int              `asn1:"optional"`
-	CertReq        bool                  `asn1:"optional,default:false"`
-	Extensions     []pkix.Extension      `asn1:"tag:0,optional"`
+	ReqPolicy      asn1.ObjectIdentifier `asn1:"optional",json:"reqPolicy,omitempty"`
+	Nonce          *big.Int              `asn1:"optional",json:"nonce,omitempty"`
+	CertReq        bool                  `asn1:"optional,default:false",json:"certReq,omitempty"`
+	Extensions     []pkix.Extension      `asn1:"tag:0,optional",json:"extensions,omitempty"`
 }
 
 type messageImprint struct {
@@ -26,13 +26,13 @@ type messageImprint struct {
 // 2.4.2. Response Format
 type response struct {
 	Status         pkiStatusInfo
-	TimeStampToken asn1.RawValue `asn1:"optional"`
+	TimeStampToken asn1.RawValue `asn1:"optional",json:"timeStampToken"`
 }
 
 type pkiStatusInfo struct {
 	Status       Status
-	StatusString []string       `asn1:"optional,utf8"`
-	FailInfo     asn1.BitString `asn1:"optional"`
+	StatusString []string       `asn1:"optional,utf8",json:"statusString"`
+	FailInfo     asn1.BitString `asn1:"optional",json:"failInfo"`
 }
 
 func (s pkiStatusInfo) FailureInfo() FailureInfo {
