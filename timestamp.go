@@ -23,8 +23,8 @@ import (
 type FailureInfo int
 
 const (
-	// UnkownFailureInfo mean that no known failure info was provided
-	UnkownFailureInfo FailureInfo = -1
+	// UnknownFailureInfo mean that no known failure info was provided
+	UnknownFailureInfo FailureInfo = -1
 	// BadAlgorithm defines an unrecognized or unsupported Algorithm Identifier
 	BadAlgorithm FailureInfo = 0
 	// BadRequest indicates that the transaction not permitted or supported
@@ -216,36 +216,36 @@ func (req *Request) Marshal() ([]byte, error) {
 // https://tools.ietf.org/html/rfc3161#section-2.4.1
 type Timestamp struct {
 	// Timestamp token part of raw ASN.1 DER content.
-	RawToken []byte
+	RawToken []byte `json:"rawToken"`
 
-	HashAlgorithm crypto.Hash
-	HashedMessage []byte
+	HashAlgorithm crypto.Hash `json:"hashAlgorithm"`
+	HashedMessage []byte `json:"hashedMessage"`
 
-	Time         time.Time
-	Accuracy     time.Duration
-	SerialNumber *big.Int
-	Policy       asn1.ObjectIdentifier
-	Ordering     bool
-	Nonce        *big.Int
-	Qualified    bool
+	Time         time.Time `json:"time"`
+	Accuracy     time.Duration `json:"accuracy"`
+	SerialNumber *big.Int `json:"serialNumber"`
+	Policy       asn1.ObjectIdentifier `json:"policy"`
+	Ordering     bool `json:"ordering"`
+	Nonce        *big.Int `json:"nonce"`
+	Qualified    bool `json:"qualified"`
 
-	Certificates []*x509.Certificate
+	Certificates []*x509.Certificate `json:"certificates"`
 
 	// If set to true, includes TSA certificate in timestamp response
-	AddTSACertificate bool
+	AddTSACertificate bool `json:"addTSACertificate"`
 
 	// Extensions contains raw X.509 extensions from the Extensions field of the
 	// Time-Stamp. When parsing time-stamps, this can be used to extract
 	// non-critical extensions that are not parsed by this package. When
 	// marshaling time-stamps, the Extensions field is ignored, see
 	// ExtraExtensions.
-	Extensions []pkix.Extension
+	Extensions []pkix.Extension `json:"extensions"`
 
 	// ExtraExtensions contains extensions to be copied, raw, into any marshaled
 	// Time-Stamp response. Values override any extensions that would otherwise
 	// be produced based on the other fields. The ExtraExtensions field is not
 	// populated when parsing Time-Stamp responses, see Extensions.
-	ExtraExtensions []pkix.Extension
+	ExtraExtensions []pkix.Extension `json:"extraExtensions"`
 }
 
 // ParseResponse parses an Time-Stamp response in DER form containing a
@@ -268,7 +268,7 @@ func ParseResponse(bytes []byte) (*Timestamp, error) {
 	if resp.Status.Status > 0 {
 		var fis string
 		fi := resp.Status.FailureInfo()
-		if fi != UnkownFailureInfo {
+		if fi != UnknownFailureInfo {
 			fis = fi.String()
 		}
 		return nil, fmt.Errorf("%s: %s (%v)",
@@ -553,7 +553,7 @@ func (t *Timestamp) populateSigningCertificateV2Ext(certificate *x509.Certificat
 		return nil, x509.ErrUnsupportedAlgorithm
 	}
 	if t.HashAlgorithm.HashFunc() == crypto.SHA1 {
-		return nil, fmt.Errorf("for SHA1 usae ESSCertID instead of ESSCertIDv2")
+		return nil, fmt.Errorf("for SHA1 use ESSCertID instead of ESSCertIDv2")
 	}
 
 	h := t.HashAlgorithm.HashFunc().New()
@@ -632,7 +632,7 @@ func (t *Timestamp) generateSignedData(tstInfo []byte, signer crypto.Signer, cer
 	return signature, nil
 }
 
-// copied from cryto/x509 package
+// copied from crypto/x509 package
 // oidNotInExtensions reports whether an extension with the given oid exists in
 // extensions.
 func oidInExtensions(oid asn1.ObjectIdentifier, extensions []pkix.Extension) bool {
