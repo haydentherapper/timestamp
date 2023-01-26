@@ -125,29 +125,29 @@ type Request struct {
 
 	// Certificates indicates if the TSA needs to return the signing certificate
 	// and optionally any other certificates of the chain as part of the response.
-	Certificates bool `json:"certificates"`
+	Certificates bool `json:"certificates,omitempty"`
 
 	// The TSAPolicyOID field, if provided, indicates the TSA policy under
 	// which the TimeStampToken SHOULD be provided
-	TSAPolicyOID asn1.ObjectIdentifier `json:"tsaPolicyOID"`
+	TSAPolicyOID asn1.ObjectIdentifier `json:"tsaPolicyOID,omitempty"`
 
 	// The nonce, if provided, allows the client to verify the timeliness of
 	// the response.
-	Nonce *big.Int `json:"nonce"`
+	Nonce *big.Int `json:"nonce,omitempty"`
 
 	// Extensions contains raw X.509 extensions from the Extensions field of the
 	// Time-Stamp request. When parsing requests, this can be used to extract
 	// non-critical extensions that are not parsed by this package. When
 	// marshaling OCSP requests, the Extensions field is ignored, see
 	// ExtraExtensions.
-	Extensions []pkix.Extension `json:"extensions"`
+	Extensions []pkix.Extension `json:"extensions,omitempty"`
 
 	// ExtraExtensions contains extensions to be copied, raw, into any marshaled
 	// OCSP response (in the singleExtensions field). Values override any
 	// extensions that would otherwise be produced based on the other fields. The
 	// ExtraExtensions field is not populated when parsing Time-Stamp requests,
 	// see Extensions.
-	ExtraExtensions []pkix.Extension `json:"extraExtensions"`
+	ExtraExtensions []pkix.Extension `json:"extraExtensions,omitempty"`
 }
 
 // ParseRequest parses an timestamp request in DER form.
