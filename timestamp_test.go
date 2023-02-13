@@ -97,14 +97,14 @@ var testCases = []testData{
 // Send the timestamp request to our timestamp server and save the response
 //  $ curl --globoff -s -S -H Content-Type:application/timestamp-query -H Host:${HOST} --data-binary @request-sha256.tsq -o ts-output.tsr ${URL}
 
-func TestParseRequest(t *testing.T) {
+func TestParseASN1Request(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.request == nil {
 				return
 			}
 
-			req, err := ParseRequest(tc.request)
+			req, err := ParseASN1Request(tc.request)
 			if err != nil {
 				t.Errorf("failed to parse request: %s", err.Error())
 				return
@@ -217,7 +217,7 @@ func TestCreateErrorResponse(t *testing.T) {
 }
 
 func TestMarshalRequest(t *testing.T) {
-	req, err := ParseRequest(reqNoNonce)
+	req, err := ParseASN1Request(reqNoNonce)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -263,7 +263,7 @@ func TestCreateRequest(t *testing.T) {
 				t.Error("request contains no bytes")
 			}
 
-			reqCheck, err := ParseRequest(req)
+			reqCheck, err := ParseASN1Request(req)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -295,9 +295,9 @@ func BenchmarkCreateRequest(b *testing.B) {
 	}
 }
 
-func BenchmarkParseRequest(b *testing.B) {
+func BenchmarkParseASN1Request(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		_, _ = ParseRequest(reqNonce)
+		_, _ = ParseASN1Request(reqNonce)
 	}
 }
 
@@ -329,16 +329,16 @@ func ExampleCreateRequest_customHashingAlgorithm() {
 	}
 }
 
-// ExampleParseRequest demonstrates how to parse a raw der time-stamping request
-func ExampleParseRequest() {
+// ExampleParseASN1Request demonstrates how to parse a raw der time-stamping request
+func ExampleParseASN1Request() {
 	// CreateRequest returns the request in der bytes
 	createdRequest, err := CreateRequest(strings.NewReader("Content to be time-stamped"), nil)
 	if err != nil {
 		panic(err)
 	}
 
-	// ParseRequest parses a request in der bytes
-	parsedRequest, err := ParseRequest(createdRequest)
+	// ParseASN1Request parses a request in der bytes
+	parsedRequest, err := ParseASN1Request(createdRequest)
 	if err != nil {
 		panic(err)
 	}
