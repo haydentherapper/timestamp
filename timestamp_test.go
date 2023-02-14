@@ -375,7 +375,7 @@ func TestCreateResponseWithNoTSACertificate(t *testing.T) {
 		Qualified:         false,
 		AddTSACertificate: false,
 	}
-	timestampBytes, err := timestamp.CreateResponse(tsaCert, tsakey)
+	timestampBytes, err := timestamp.CreateResponse(tsaCert, tsakey, asn1.Marshal)
 	if err != nil {
 		t.Errorf("unable to generate time stamp response: %s", err.Error())
 	}
@@ -428,7 +428,7 @@ func TestCreateResponseWithIncludeTSACertificate(t *testing.T) {
 		Qualified:         true,
 		AddTSACertificate: true,
 	}
-	timestampBytes, err := timestamp.CreateResponse(tsaCert, tsakey)
+	timestampBytes, err := timestamp.CreateResponse(tsaCert, tsakey, asn1.Marshal)
 	if err != nil {
 		t.Errorf("unable to generate time stamp response: %s", err.Error())
 	}
@@ -491,7 +491,7 @@ func TestSignWithTSUNoCertificate(t *testing.T) {
 		Qualified:         false,
 		AddTSACertificate: false,
 	}
-	timestampBytes, err := timestamp.CreateResponse(tsuCert, tsukey)
+	timestampBytes, err := timestamp.CreateResponse(tsuCert, tsukey, asn1.Marshal)
 	if err != nil {
 		t.Errorf("unable to generate time stamp response: %s", err.Error())
 	}
@@ -545,7 +545,7 @@ func TestSignWithTSUEmbedTSUCertificate(t *testing.T) {
 		Qualified:         true,
 		AddTSACertificate: true,
 	}
-	timestampBytes, err := timestamp.CreateResponse(tsuCert, tsukey)
+	timestampBytes, err := timestamp.CreateResponse(tsuCert, tsukey, asn1.Marshal)
 	if err != nil {
 		t.Errorf("unable to generate time stamp response: %s", err.Error())
 	}
@@ -606,7 +606,7 @@ func TestSignWithTSUIncludeCertificateChain(t *testing.T) {
 		AddTSACertificate: true,
 		Certificates:      []*x509.Certificate{tsaCert}, // add parent certificate
 	}
-	timestampBytes, err := timestamp.CreateResponse(tsuCert, tsuKey)
+	timestampBytes, err := timestamp.CreateResponse(tsuCert, tsuKey, asn1.Marshal)
 	if err != nil {
 		t.Fatalf("unable to generate time stamp response: %s", err.Error())
 	}

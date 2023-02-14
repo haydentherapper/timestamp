@@ -426,7 +426,7 @@ func CreateRequest(r io.Reader, opts *RequestOptions) ([]byte, error) {
 //
 // The responder cert is used to populate the responder's name field, and the
 // certificate itself is provided alongside the timestamp response signature.
-func (t *Timestamp) CreateResponse(signingCert *x509.Certificate, priv crypto.Signer) ([]byte, error) {
+func (t *Timestamp) CreateResponse(signingCert *x509.Certificate, priv crypto.Signer, marshal func(v any) ([]byte, error)) ([]byte, error) {
 	messageImprint := getMessageImprint(t.HashAlgorithm, t.HashedMessage)
 
 	tsaSerialNumber, err := generateTSASerialNumber()
@@ -447,7 +447,7 @@ func (t *Timestamp) CreateResponse(signingCert *x509.Certificate, priv crypto.Si
 		},
 		TimeStampToken: asn1.RawValue{FullBytes: signature},
 	}
-	tspResponseBytes, err := asn1.Marshal(timestampRes)
+	tspResponseBytes, err := marshal(timestampRes)
 	if err != nil {
 		return nil, err
 	}
