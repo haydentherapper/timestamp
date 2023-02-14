@@ -154,7 +154,7 @@ type Request struct {
 type EncodingHandler interface {
 	ParseRequest(bytes []byte) (*Request, error)
 	ParseResponse(bytes []byte) (*Timestamp, error)
-	MarshalResponse(r response) ([]byte, error)
+	MarshalResponse(v any) ([]byte, error)
 }
 
 func NewEncodingHandler(requestFormat string) (EncodingHandler, error) {
@@ -195,8 +195,8 @@ func (h JSONEncodingHandler) ParseResponse(bytes []byte) (*Timestamp, error) {
 	return Parse(resp.TimeStampToken.FullBytes)
 }
 
-func (h JSONEncodingHandler) MarshalResponse(r response) ([]byte, error) {
-	return json.Marshal(r)
+func (h JSONEncodingHandler) MarshalResponse(v any) ([]byte, error) {
+	return json.Marshal(v)
 }
 
 type ASN1EncodingHandler struct {}
@@ -234,8 +234,8 @@ func (h ASN1EncodingHandler) ParseResponse(bytes []byte) (*Timestamp, error) {
 	return Parse(resp.TimeStampToken.FullBytes)
 }
 
-func (h ASN1EncodingHandler) MarshalResponse(r response) ([]byte, error) {
-	return asn1.Marshal(r)
+func (h ASN1EncodingHandler) MarshalResponse(v any) ([]byte, error) {
+	return asn1.Marshal(v)
 }
 
 func validateResponse(resp response) error {
