@@ -151,6 +151,113 @@ type Request struct {
 	ExtraExtensions []pkix.Extension `json:"extraExtensions,omitempty"`
 }
 
+type EncodingHandler interface {
+	ParseRequest(bytes []byte) (*Request, error)
+	ParseResponse(bytes []byte) (*Timestamp, error)
+	MarshalResponse(r response) ([]byte, error)
+}
+
+func NewEncodingHandler(requestFormat string) (EncodingHandler, error) {
+	switch requestFormat {
+	case "json":
+		return JSONEncodingHandler{}, nil
+	case "timestamp-query":
+		return ASN1EncodingHandler{}, nil
+	default:
+		return nil, ParseError(fmt.Sprintf("unsupported format: %s", requestFormat))
+	}	
+}
+
+type JSONEncodingHandler struct {}
+
+func (h JSONEncodingHandler) ParseRequest(bytes []byte) (*Request, error) {
+	var req request
+
+	if err := json.Unmarshal(bytes, &req); err != nil {
+		return nil, err
+	}
+
+	return buildRequest(req)
+}
+
+func (h JSONEncodingHandler) ParseResponse(bytes []byte) (*Timestamp, error) {
+	var resp response
+
+	if err := json.Unmarshal(bytes, &resp); err != nil {
+		return nil, err
+	}
+
+	err := validateResponse(resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return Parse(resp.TimeStampToken.FullBytes)
+}
+
+func (h JSONEncodingHandler) MarshalResponse(r response) ([]byte, error) {
+	return json.Marshal(r)
+}
+
+type ASN1EncodingHandler struct {}
+
+func (h ASN1EncodingHandler) ParseRequest(bytes []byte) (*Request, error) {
+	var req request
+
+	rest, err := asn1.Unmarshal(bytes, &req)
+	if err != nil {
+		return nil, err
+	}
+	if len(rest) > 0 {
+		return nil, ParseError("trailing data in Time-Stamp request")
+	}
+
+	return buildRequest(req)
+}
+
+func (h ASN1EncodingHandler) ParseResponse(bytes []byte) (*Timestamp, error) {
+	var resp response
+
+	rest, err := asn1.Unmarshal(bytes, &resp)
+	if err != nil {
+		return nil, err
+	}
+	if len(rest) > 0 {
+		return nil, ParseError("trailing data in Time-Stamp response")
+	}
+
+	err = validateResponse(resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return Parse(resp.TimeStampToken.FullBytes)
+}
+
+func (h ASN1EncodingHandler) MarshalResponse(r response) ([]byte, error) {
+	return asn1.Marshal(r)
+}
+
+func validateResponse(resp response) error {
+	if resp.Status.Status > 0 {
+		var fis string
+		fi := resp.Status.FailureInfo()
+		if fi != UnknownFailureInfo {
+			fis = fi.String()
+		}
+		return fmt.Errorf("%s: %s (%v)",
+			resp.Status.Status.String(),
+			strings.Join(resp.Status.StatusString, ","),
+			fis)
+	}
+
+	if len(resp.TimeStampToken.Bytes) == 0 {
+		return ParseError("no pkcs7 data in Time-Stamp response")
+	}
+
+	return nil
+}
+
 func buildRequest(req request) (*Request, error) {
 	if len(req.MessageImprint.HashedMessage) == 0 {
 		return nil, ParseError("Time-Stamp request contains no hashed message")
@@ -169,33 +276,6 @@ func buildRequest(req request) (*Request, error) {
 		TSAPolicyOID:  req.ReqPolicy,
 		Extensions:    req.Extensions,
 	}, nil
-}
-
-// ParseASN1Request parses a timestamp request in DER form.
-func ParseASN1Request(bytes []byte) (*Request, error) {
-	var err error
-	var rest []byte
-	var req request
-
-	if rest, err = asn1.Unmarshal(bytes, &req); err != nil {
-		return nil, err
-	}
-	if len(rest) > 0 {
-		return nil, ParseError("trailing data in Time-Stamp request")
-	}
-
-	return buildRequest(req)
-}
-
-// ParseJSONRequest parses a timestamp request in JSON form.
-func ParseJSONRequest(bytes []byte) (*Request, error) {
-	var req request
-
-	if err := json.Unmarshal(bytes, &req); err != nil {
-		return nil, err
-	}
-
-	return buildRequest(req)
 }
 
 // Marshal marshals the Time-Stamp request to ASN.1 DER encoded form.

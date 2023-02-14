@@ -98,13 +98,15 @@ var testCases = []testData{
 //  $ curl --globoff -s -S -H Content-Type:application/timestamp-query -H Host:${HOST} --data-binary @request-sha256.tsq -o ts-output.tsr ${URL}
 
 func TestParseASN1Request(t *testing.T) {
+	asn1Handler := ASN1EncodingHandler{}
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.request == nil {
 				return
 			}
 
-			req, err := ParseASN1Request(tc.request)
+			req, err := asn1Handler.ParseRequest(tc.request)
 			if err != nil {
 				t.Errorf("failed to parse request: %s", err.Error())
 				return
@@ -217,7 +219,8 @@ func TestCreateErrorResponse(t *testing.T) {
 }
 
 func TestMarshalRequest(t *testing.T) {
-	req, err := ParseASN1Request(reqNoNonce)
+	asn1Handler := ASN1EncodingHandler{}
+	req, err := asn1Handler.ParseRequest(reqNoNonce)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -237,6 +240,8 @@ func TestCreateRequest(t *testing.T) {
 
 	nonce := big.NewInt(0)
 	nonce = nonce.SetBytes([]byte{0x1, 0x2, 0x3})
+
+	asn1Handler := ASN1EncodingHandler{}
 
 	for _, th := range testHashes {
 		t.Run(fmt.Sprintf("%d", th), func(t *testing.T) {
@@ -263,7 +268,7 @@ func TestCreateRequest(t *testing.T) {
 				t.Error("request contains no bytes")
 			}
 
-			reqCheck, err := ParseASN1Request(req)
+			reqCheck, err := asn1Handler.ParseRequest(req)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -296,8 +301,9 @@ func BenchmarkCreateRequest(b *testing.B) {
 }
 
 func BenchmarkParseASN1Request(b *testing.B) {
+	asn1Handler := ASN1EncodingHandler{}
 	for n := 0; n < b.N; n++ {
-		_, _ = ParseASN1Request(reqNonce)
+		_, _ = asn1Handler.ParseRequest(reqNonce)
 	}
 }
 
@@ -338,7 +344,8 @@ func ExampleParseASN1Request() {
 	}
 
 	// ParseASN1Request parses a request in der bytes
-	parsedRequest, err := ParseASN1Request(createdRequest)
+	asn1Handler := ASN1EncodingHandler{}
+	parsedRequest, err := asn1Handler.ParseRequest(createdRequest)
 	if err != nil {
 		panic(err)
 	}
