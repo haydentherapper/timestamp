@@ -121,34 +121,34 @@ func (p ParseError) Error() string {
 // Request represents an Time-Stamp request. See
 // https://tools.ietf.org/html/rfc3161#section-2.4.1
 type Request struct {
-	HashAlgorithm crypto.Hash `json:"hashAlgorithm"`
-	HashedMessage []byte `json:"hashedMessage"`
+	HashAlgorithm crypto.Hash
+	HashedMessage []byte
 
 	// Certificates indicates if the TSA needs to return the signing certificate
 	// and optionally any other certificates of the chain as part of the response.
-	Certificates bool `json:"certificates,omitempty"`
+	Certificates bool
 
 	// The TSAPolicyOID field, if provided, indicates the TSA policy under
 	// which the TimeStampToken SHOULD be provided
-	TSAPolicyOID asn1.ObjectIdentifier `json:"tsaPolicyOID,omitempty"`
+	TSAPolicyOID asn1.ObjectIdentifier
 
 	// The nonce, if provided, allows the client to verify the timeliness of
 	// the response.
-	Nonce *big.Int `json:"nonce,omitempty"`
+	Nonce *big.Int
 
 	// Extensions contains raw X.509 extensions from the Extensions field of the
 	// Time-Stamp request. When parsing requests, this can be used to extract
 	// non-critical extensions that are not parsed by this package. When
 	// marshaling OCSP requests, the Extensions field is ignored, see
 	// ExtraExtensions.
-	Extensions []pkix.Extension `json:"extensions,omitempty"`
+	Extensions []pkix.Extension
 
 	// ExtraExtensions contains extensions to be copied, raw, into any marshaled
 	// OCSP response (in the singleExtensions field). Values override any
 	// extensions that would otherwise be produced based on the other fields. The
 	// ExtraExtensions field is not populated when parsing Time-Stamp requests,
 	// see Extensions.
-	ExtraExtensions []pkix.Extension `json:"extraExtensions,omitempty"`
+	ExtraExtensions []pkix.Extension
 }
 
 type EncodingHandler interface {
@@ -312,36 +312,36 @@ func (req *Request) Marshal() ([]byte, error) {
 // https://tools.ietf.org/html/rfc3161#section-2.4.1
 type Timestamp struct {
 	// Timestamp token part of raw ASN.1 DER content.
-	RawToken []byte `json:"rawToken"`
+	RawToken []byte
 
-	HashAlgorithm crypto.Hash `json:"hashAlgorithm"`
-	HashedMessage []byte `json:"hashedMessage"`
+	HashAlgorithm crypto.Hash
+	HashedMessage []byte
 
-	Time         time.Time `json:"time"`
-	Accuracy     time.Duration `json:"accuracy"`
-	SerialNumber *big.Int `json:"serialNumber"`
-	Policy       asn1.ObjectIdentifier `json:"policy"`
-	Ordering     bool `json:"ordering"`
-	Nonce        *big.Int `json:"nonce"`
-	Qualified    bool `json:"qualified"`
+	Time         time.Time
+	Accuracy     time.Duration
+	SerialNumber *big.Int
+	Policy       asn1.ObjectIdentifier
+	Ordering     bool
+	Nonce        *big.Int
+	Qualified    bool
 
-	Certificates []*x509.Certificate `json:"certificates"`
+	Certificates []*x509.Certificate
 
 	// If set to true, includes TSA certificate in timestamp response
-	AddTSACertificate bool `json:"addTSACertificate"`
+	AddTSACertificate bool
 
 	// Extensions contains raw X.509 extensions from the Extensions field of the
 	// Time-Stamp. When parsing time-stamps, this can be used to extract
 	// non-critical extensions that are not parsed by this package. When
 	// marshaling time-stamps, the Extensions field is ignored, see
 	// ExtraExtensions.
-	Extensions []pkix.Extension `json:"extensions"`
+	Extensions []pkix.Extension
 
 	// ExtraExtensions contains extensions to be copied, raw, into any marshaled
 	// Time-Stamp response. Values override any extensions that would otherwise
 	// be produced based on the other fields. The ExtraExtensions field is not
 	// populated when parsing Time-Stamp responses, see Extensions.
-	ExtraExtensions []pkix.Extension `json:"extraExtensions"`
+	ExtraExtensions []pkix.Extension
 }
 
 // ParseResponse parses an Time-Stamp response in DER form containing a
