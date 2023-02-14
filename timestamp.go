@@ -180,6 +180,11 @@ func (h JSONEncodingHandler) ParseRequest(bytes []byte) (*Request, error) {
 	return buildRequest(req)
 }
 
+// ParseResponse parses an Time-Stamp response in JSON form containing a
+// TimeStampToken.
+//
+// Invalid signatures or parse failures will result in a ParseError. Error
+// responses will result in a ResponseError.
 func (h JSONEncodingHandler) ParseResponse(bytes []byte) (*Timestamp, error) {
 	var resp response
 
@@ -192,7 +197,7 @@ func (h JSONEncodingHandler) ParseResponse(bytes []byte) (*Timestamp, error) {
 		return nil, err
 	}
 
-	return Parse(resp.TimeStampToken.FullBytes)
+	return ParseTimestampToken(resp.TimeStampToken.FullBytes)
 }
 
 func (h JSONEncodingHandler) MarshalResponse(v any) ([]byte, error) {
@@ -215,6 +220,11 @@ func (h ASN1EncodingHandler) ParseRequest(bytes []byte) (*Request, error) {
 	return buildRequest(req)
 }
 
+// ParseResponse parses an Time-Stamp response in DER form containing a
+// TimeStampToken.
+//
+// Invalid signatures or parse failures will result in a ParseError. Error
+// responses will result in a ResponseError.
 func (h ASN1EncodingHandler) ParseResponse(bytes []byte) (*Timestamp, error) {
 	var resp response
 
@@ -231,7 +241,7 @@ func (h ASN1EncodingHandler) ParseResponse(bytes []byte) (*Timestamp, error) {
 		return nil, err
 	}
 
-	return Parse(resp.TimeStampToken.FullBytes)
+	return ParseTimestampToken(resp.TimeStampToken.FullBytes)
 }
 
 func (h ASN1EncodingHandler) MarshalResponse(v any) ([]byte, error) {
@@ -344,48 +354,12 @@ type Timestamp struct {
 	ExtraExtensions []pkix.Extension
 }
 
-// ParseResponse parses an Time-Stamp response in DER form containing a
-// TimeStampToken.
-//
-// Invalid signatures or parse failures will result in a ParseError. Error
-// responses will result in a ResponseError.
-func ParseResponse(bytes []byte) (*Timestamp, error) {
-	var err error
-	var rest []byte
-	var resp response
-
-	if rest, err = asn1.Unmarshal(bytes, &resp); err != nil {
-		return nil, err
-	}
-	if len(rest) > 0 {
-		return nil, ParseError("trailing data in Time-Stamp response")
-	}
-
-	if resp.Status.Status > 0 {
-		var fis string
-		fi := resp.Status.FailureInfo()
-		if fi != UnknownFailureInfo {
-			fis = fi.String()
-		}
-		return nil, fmt.Errorf("%s: %s (%v)",
-			resp.Status.Status.String(),
-			strings.Join(resp.Status.StatusString, ","),
-			fis)
-	}
-
-	if len(resp.TimeStampToken.Bytes) == 0 {
-		return nil, ParseError("no pkcs7 data in Time-Stamp response")
-	}
-
-	return Parse(resp.TimeStampToken.FullBytes)
-}
-
-// Parse parses an Time-Stamp in DER form. If the time-stamp contains a
+// Parse parses an Time-Stamp token in DER form. If the time-stamp contains a
 // certificate then the signature over the response is checked.
 //
 // Invalid signatures or parse failures will result in a ParseError. Error
 // responses will result in a ResponseError.
-func Parse(bytes []byte) (*Timestamp, error) {
+func ParseTimestampToken(bytes []byte) (*Timestamp, error) {
 	var addTSACertificate bool
 	p7, err := pkcs7.Parse(bytes)
 	if err != nil {
@@ -501,7 +475,7 @@ func CreateRequest(r io.Reader, opts *RequestOptions) ([]byte, error) {
 	return req.Marshal()
 }
 
-// CreateResponse returns a DER-encoded timestamp response with the specified contents.
+// CreateResponse returns a DER-encoded or JSON timestamp response with the specified contents.
 // The fields in the response are populated as follows:
 //
 // The responder cert is used to populate the responder's name field, and the

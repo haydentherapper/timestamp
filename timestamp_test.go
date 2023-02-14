@@ -132,13 +132,14 @@ func TestParseASN1Request(t *testing.T) {
 }
 
 func TestParseResponse(t *testing.T) {
+	asn1Handler := ASN1EncodingHandler{}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.response == nil {
 				return
 			}
 
-			resp, err := ParseResponse(tc.response)
+			resp, err := asn1Handler.ParseResponse(tc.response)
 			if err != nil {
 				t.Errorf("failed to parse response: %s", err.Error())
 				return
@@ -173,8 +174,8 @@ func TestParseResponse(t *testing.T) {
 	}
 }
 
-func TestParse(t *testing.T) {
-	ts, err := Parse(timeStampToken)
+func TestParseTimestampToken(t *testing.T) {
+	ts, err := ParseTimestampToken(timeStampToken)
 	if err != nil {
 		t.Errorf("failed to parse timeStampToken: %s", err.Error())
 	}
@@ -195,7 +196,8 @@ func TestParse(t *testing.T) {
 }
 
 func TestParseResponseRejection(t *testing.T) {
-	_, err := ParseResponse(respRejection)
+	asn1Handler := ASN1EncodingHandler{}
+	_, err := asn1Handler.ParseResponse(respRejection)
 	if err == nil {
 		t.Errorf("failed to parse response with rejection: %s", err.Error())
 	}
@@ -212,7 +214,9 @@ func TestCreateErrorResponse(t *testing.T) {
 	}
 
 	expected := "the request is rejected:  (the TSA's time source is not available)"
-	_, err = ParseResponse(resp)
+	
+	asn1Handler := ASN1EncodingHandler{}
+	_, err = asn1Handler.ParseResponse(resp)
 	if err.Error() != expected {
 		t.Errorf("unexpected error message:\n\t%s\nexpected:\n\t%s\n", err.Error(), expected)
 	}
@@ -300,16 +304,17 @@ func BenchmarkCreateRequest(b *testing.B) {
 	}
 }
 
-func BenchmarkParseASN1Request(b *testing.B) {
+func BenchmarkASN1EncodingHandlerParseRequest(b *testing.B) {
 	asn1Handler := ASN1EncodingHandler{}
 	for n := 0; n < b.N; n++ {
 		_, _ = asn1Handler.ParseRequest(reqNonce)
 	}
 }
 
-func BenchmarkParseResponse(b *testing.B) {
+func BenchmarkASN1EncodingHandlerParseResponse(b *testing.B) {
+	asn1Handler := ASN1EncodingHandler{}
 	for n := 0; n < b.N; n++ {
-		_, _ = ParseResponse(respNonce)
+		_, _ = asn1Handler.ParseResponse(respNonce)
 	}
 }
 
@@ -386,7 +391,9 @@ func TestCreateResponseWithNoTSACertificate(t *testing.T) {
 	if err != nil {
 		t.Errorf("unable to generate time stamp response: %s", err.Error())
 	}
-	timestampRes, err := ParseResponse(timestampBytes)
+
+	asn1Handler := ASN1EncodingHandler{}
+	timestampRes, err := asn1Handler.ParseResponse(timestampBytes)
 	if err != nil {
 		t.Fatalf("unable to parse time stamp response: %s", err.Error())
 	}
@@ -444,7 +451,8 @@ func TestCreateResponseWithIncludeTSACertificate(t *testing.T) {
 	// openssl ts -reply -in timestamp.tsr -text
 	// _ = os.WriteFile("timestamp.tsr", timestampBytes, 0644)
 
-	timestampRes, err := ParseResponse(timestampBytes)
+	asn1Handler := ASN1EncodingHandler{}
+	timestampRes, err := asn1Handler.ParseResponse(timestampBytes)
 	if err != nil {
 		t.Errorf("unable to parse time stamp response: %s", err.Error())
 	}
@@ -502,7 +510,9 @@ func TestSignWithTSUNoCertificate(t *testing.T) {
 	if err != nil {
 		t.Errorf("unable to generate time stamp response: %s", err.Error())
 	}
-	timestampRes, err := ParseResponse(timestampBytes)
+
+	asn1Handler := ASN1EncodingHandler{}
+	timestampRes, err := asn1Handler.ParseResponse(timestampBytes)
 	if err != nil {
 		t.Fatalf("unable to parse time stamp response: %s", err.Error())
 	}
@@ -557,7 +567,8 @@ func TestSignWithTSUEmbedTSUCertificate(t *testing.T) {
 		t.Errorf("unable to generate time stamp response: %s", err.Error())
 	}
 
-	timestampRes, err := ParseResponse(timestampBytes)
+	asn1Handler := ASN1EncodingHandler{}
+	timestampRes, err := asn1Handler.ParseResponse(timestampBytes)
 	if err != nil {
 		t.Fatalf("unable to parse time stamp response: %s", err.Error())
 	}
@@ -618,7 +629,8 @@ func TestSignWithTSUIncludeCertificateChain(t *testing.T) {
 		t.Fatalf("unable to generate time stamp response: %s", err.Error())
 	}
 
-	timestampRes, err := ParseResponse(timestampBytes)
+	asn1Handler := ASN1EncodingHandler{}
+	timestampRes, err := asn1Handler.ParseResponse(timestampBytes)
 	if err != nil {
 		t.Fatalf("unable to parse time stamp response: %s", err.Error())
 	}
