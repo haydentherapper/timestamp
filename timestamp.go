@@ -171,8 +171,8 @@ func buildRequest(req request) (*Request, error) {
 	}, nil
 }
 
-// ParseJSONRequest parses an timestamp request in JSON form.
-func ParseJSONRequest(bytes []byte) (*Request, error) {
+// ParseRequestFromJSON parses an timestamp request in JSON form.
+func ParseRequestFromJSON(bytes []byte) (*Request, error) {
 	var req request
 
 	if err := json.Unmarshal(bytes, &req); err != nil {
@@ -182,8 +182,8 @@ func ParseJSONRequest(bytes []byte) (*Request, error) {
 	return buildRequest(req)
 }
 
-// ParseASN1Request parses an timestamp request in DER form.
-func ParseASN1Request(bytes []byte) (*Request, error) {
+// ParseRequest parses an timestamp request in DER form.
+func ParseRequest(bytes []byte) (*Request, error) {
 	var req request
 
 	rest, err := asn1.Unmarshal(bytes, &req)

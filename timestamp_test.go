@@ -97,14 +97,14 @@ var testCases = []testData{
 // Send the timestamp request to our timestamp server and save the response
 //  $ curl --globoff -s -S -H Content-Type:application/timestamp-query -H Host:${HOST} --data-binary @request-sha256.tsq -o ts-output.tsr ${URL}
 
-func TestParseASN1Request(t *testing.T) {
+func TestParseRequest(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.request == nil {
 				return
 			}
 
-			req, err := ParseASN1Request(tc.request)
+			req, err := ParseRequest(tc.request)
 			if err != nil {
 				t.Errorf("failed to parse request: %s", err.Error())
 				return
@@ -217,7 +217,7 @@ func TestCreateErrorResponse(t *testing.T) {
 }
 
 func TestMarshalRequest(t *testing.T) {
-	req, err := ParseASN1Request(reqNoNonce)
+	req, err := ParseRequest(reqNoNonce)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -263,7 +263,7 @@ func TestCreateRequest(t *testing.T) {
 				t.Error("request contains no bytes")
 			}
 
-			reqCheck, err := ParseASN1Request(req)
+			reqCheck, err := ParseRequest(req)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -295,9 +295,9 @@ func BenchmarkCreateRequest(b *testing.B) {
 	}
 }
 
-func BenchmarkParseASN1Request(b *testing.B) {
+func BenchmarkParseRequest(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		_, _ = ParseASN1Request(reqNonce)
+		_, _ = ParseRequest(reqNonce)
 	}
 }
 
@@ -329,16 +329,16 @@ func ExampleCreateRequest_customHashingAlgorithm() {
 	}
 }
 
-// ExampleParseASN1Request demonstrates how to parse a raw der time-stamping request
-func ExampleParseASN1Request() {
+// ExampleParseRequest demonstrates how to parse a raw der time-stamping request
+func ExampleParseRequest() {
 	// CreateRequest returns the request in der bytes
 	createdRequest, err := CreateRequest(strings.NewReader("Content to be time-stamped"), nil)
 	if err != nil {
 		panic(err)
 	}
 
-	// ParseASN1Request parses a request in der bytes
-	parsedRequest, err := ParseASN1Request(createdRequest)
+	// ParseRequest parses a request in der bytes
+	parsedRequest, err := ParseRequest(createdRequest)
 	if err != nil {
 		panic(err)
 	}
