@@ -98,15 +98,13 @@ var testCases = []testData{
 //  $ curl --globoff -s -S -H Content-Type:application/timestamp-query -H Host:${HOST} --data-binary @request-sha256.tsq -o ts-output.tsr ${URL}
 
 func TestParseASN1Request(t *testing.T) {
-	asn1Handler := ASN1EncodingHandler{}
-
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.request == nil {
 				return
 			}
 
-			req, err := asn1Handler.ParseRequest(tc.request)
+			req, err := ParseASN1Request(tc.request)
 			if err != nil {
 				t.Errorf("failed to parse request: %s", err.Error())
 				return
@@ -132,14 +130,13 @@ func TestParseASN1Request(t *testing.T) {
 }
 
 func TestParseResponse(t *testing.T) {
-	asn1Handler := ASN1EncodingHandler{}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.response == nil {
 				return
 			}
 
-			resp, err := asn1Handler.ParseResponse(tc.response)
+			resp, err := ParseResponse(tc.response)
 			if err != nil {
 				t.Errorf("failed to parse response: %s", err.Error())
 				return
@@ -196,8 +193,7 @@ func TestParseTimestampToken(t *testing.T) {
 }
 
 func TestParseResponseRejection(t *testing.T) {
-	asn1Handler := ASN1EncodingHandler{}
-	_, err := asn1Handler.ParseResponse(respRejection)
+	_, err := ParseResponse(respRejection)
 	if err == nil {
 		t.Errorf("failed to parse response with rejection: %s", err.Error())
 	}
@@ -215,16 +211,14 @@ func TestCreateErrorResponse(t *testing.T) {
 
 	expected := "the request is rejected:  (the TSA's time source is not available)"
 	
-	asn1Handler := ASN1EncodingHandler{}
-	_, err = asn1Handler.ParseResponse(resp)
+	_, err = ParseResponse(resp)
 	if err.Error() != expected {
 		t.Errorf("unexpected error message:\n\t%s\nexpected:\n\t%s\n", err.Error(), expected)
 	}
 }
 
 func TestMarshalRequest(t *testing.T) {
-	asn1Handler := ASN1EncodingHandler{}
-	req, err := asn1Handler.ParseRequest(reqNoNonce)
+	req, err := ParseASN1Request(reqNoNonce)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -245,8 +239,6 @@ func TestCreateRequest(t *testing.T) {
 	nonce := big.NewInt(0)
 	nonce = nonce.SetBytes([]byte{0x1, 0x2, 0x3})
 
-	asn1Handler := ASN1EncodingHandler{}
-
 	for _, th := range testHashes {
 		t.Run(fmt.Sprintf("%d", th), func(t *testing.T) {
 			msg := "Content to by timestamped"
@@ -258,6 +250,8 @@ func TestCreateRequest(t *testing.T) {
 			}
 			hashedMsg := h.Sum(nil)
 
+			//  crypto hash: %v", th)
+			// fmt.Println("\n xyz message unhashed: " + msg)
 			req, err := CreateRequest(strings.NewReader(msg), &RequestOptions{
 				Hash:         th,
 				Nonce:        nonce,
@@ -272,7 +266,7 @@ func TestCreateRequest(t *testing.T) {
 				t.Error("request contains no bytes")
 			}
 
-			reqCheck, err := asn1Handler.ParseRequest(req)
+			reqCheck, err := ParseASN1Request(req)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -304,17 +298,15 @@ func BenchmarkCreateRequest(b *testing.B) {
 	}
 }
 
-func BenchmarkASN1EncodingHandlerParseRequest(b *testing.B) {
-	asn1Handler := ASN1EncodingHandler{}
+func BenchmarkParseASN1Request(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		_, _ = asn1Handler.ParseRequest(reqNonce)
+		_, _ = ParseASN1Request(reqNonce)
 	}
 }
 
 func BenchmarkASN1EncodingHandlerParseResponse(b *testing.B) {
-	asn1Handler := ASN1EncodingHandler{}
 	for n := 0; n < b.N; n++ {
-		_, _ = asn1Handler.ParseResponse(respNonce)
+		_, _ = ParseResponse(respNonce)
 	}
 }
 
@@ -349,8 +341,7 @@ func ExampleParseASN1Request() {
 	}
 
 	// ParseASN1Request parses a request in der bytes
-	asn1Handler := ASN1EncodingHandler{}
-	parsedRequest, err := asn1Handler.ParseRequest(createdRequest)
+	parsedRequest, err := ParseASN1Request(createdRequest)
 	if err != nil {
 		panic(err)
 	}
@@ -392,8 +383,7 @@ func TestCreateResponseWithNoTSACertificate(t *testing.T) {
 		t.Errorf("unable to generate time stamp response: %s", err.Error())
 	}
 
-	asn1Handler := ASN1EncodingHandler{}
-	timestampRes, err := asn1Handler.ParseResponse(timestampBytes)
+	timestampRes, err := ParseResponse(timestampBytes)
 	if err != nil {
 		t.Fatalf("unable to parse time stamp response: %s", err.Error())
 	}
@@ -451,8 +441,7 @@ func TestCreateResponseWithIncludeTSACertificate(t *testing.T) {
 	// openssl ts -reply -in timestamp.tsr -text
 	// _ = os.WriteFile("timestamp.tsr", timestampBytes, 0644)
 
-	asn1Handler := ASN1EncodingHandler{}
-	timestampRes, err := asn1Handler.ParseResponse(timestampBytes)
+	timestampRes, err := ParseResponse(timestampBytes)
 	if err != nil {
 		t.Errorf("unable to parse time stamp response: %s", err.Error())
 	}
@@ -511,8 +500,7 @@ func TestSignWithTSUNoCertificate(t *testing.T) {
 		t.Errorf("unable to generate time stamp response: %s", err.Error())
 	}
 
-	asn1Handler := ASN1EncodingHandler{}
-	timestampRes, err := asn1Handler.ParseResponse(timestampBytes)
+	timestampRes, err := ParseResponse(timestampBytes)
 	if err != nil {
 		t.Fatalf("unable to parse time stamp response: %s", err.Error())
 	}
@@ -567,8 +555,7 @@ func TestSignWithTSUEmbedTSUCertificate(t *testing.T) {
 		t.Errorf("unable to generate time stamp response: %s", err.Error())
 	}
 
-	asn1Handler := ASN1EncodingHandler{}
-	timestampRes, err := asn1Handler.ParseResponse(timestampBytes)
+	timestampRes, err := ParseResponse(timestampBytes)
 	if err != nil {
 		t.Fatalf("unable to parse time stamp response: %s", err.Error())
 	}
@@ -629,8 +616,7 @@ func TestSignWithTSUIncludeCertificateChain(t *testing.T) {
 		t.Fatalf("unable to generate time stamp response: %s", err.Error())
 	}
 
-	asn1Handler := ASN1EncodingHandler{}
-	timestampRes, err := asn1Handler.ParseResponse(timestampBytes)
+	timestampRes, err := ParseResponse(timestampBytes)
 	if err != nil {
 		t.Fatalf("unable to parse time stamp response: %s", err.Error())
 	}
