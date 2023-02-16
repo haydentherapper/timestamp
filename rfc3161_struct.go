@@ -26,13 +26,13 @@ type messageImprint struct {
 // 2.4.2. Response Format
 type response struct {
 	Status         pkiStatusInfo
-	TimeStampToken asn1.RawValue `asn1:"optional" json:"timeStampToken"`
+	TimeStampToken asn1.RawValue `asn1:"optional"`
 }
 
 type pkiStatusInfo struct {
 	Status       Status
-	StatusString []string       `asn1:"optional,utf8" json:"statusString"`
-	FailInfo     asn1.BitString `asn1:"optional" json:"failInfo"`
+	StatusString []string       `asn1:"optional,utf8"`
+	FailInfo     asn1.BitString `asn1:"optional"`
 }
 
 func (s pkiStatusInfo) FailureInfo() FailureInfo {
