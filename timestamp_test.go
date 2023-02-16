@@ -172,7 +172,7 @@ func TestParseResponse(t *testing.T) {
 }
 
 func TestParseTimestampToken(t *testing.T) {
-	ts, err := ParseTimestampToken(timeStampToken)
+	ts, err := Parse(timeStampToken)
 	if err != nil {
 		t.Errorf("failed to parse timeStampToken: %s", err.Error())
 	}
@@ -378,7 +378,7 @@ func TestCreateResponseWithNoTSACertificate(t *testing.T) {
 		Qualified:         false,
 		AddTSACertificate: false,
 	}
-	timestampBytes, err := timestamp.CreateResponse(tsaCert, tsakey, asn1.Marshal)
+	timestampBytes, err := timestamp.CreateResponse(tsaCert, tsakey)
 	if err != nil {
 		t.Errorf("unable to generate time stamp response: %s", err.Error())
 	}
@@ -432,7 +432,7 @@ func TestCreateResponseWithIncludeTSACertificate(t *testing.T) {
 		Qualified:         true,
 		AddTSACertificate: true,
 	}
-	timestampBytes, err := timestamp.CreateResponse(tsaCert, tsakey, asn1.Marshal)
+	timestampBytes, err := timestamp.CreateResponse(tsaCert, tsakey)
 	if err != nil {
 		t.Errorf("unable to generate time stamp response: %s", err.Error())
 	}
@@ -495,7 +495,7 @@ func TestSignWithTSUNoCertificate(t *testing.T) {
 		Qualified:         false,
 		AddTSACertificate: false,
 	}
-	timestampBytes, err := timestamp.CreateResponse(tsuCert, tsukey, asn1.Marshal)
+	timestampBytes, err := timestamp.CreateResponse(tsuCert, tsukey)
 	if err != nil {
 		t.Errorf("unable to generate time stamp response: %s", err.Error())
 	}
@@ -550,7 +550,7 @@ func TestSignWithTSUEmbedTSUCertificate(t *testing.T) {
 		Qualified:         true,
 		AddTSACertificate: true,
 	}
-	timestampBytes, err := timestamp.CreateResponse(tsuCert, tsukey, asn1.Marshal)
+	timestampBytes, err := timestamp.CreateResponse(tsuCert, tsukey)
 	if err != nil {
 		t.Errorf("unable to generate time stamp response: %s", err.Error())
 	}
@@ -611,7 +611,7 @@ func TestSignWithTSUIncludeCertificateChain(t *testing.T) {
 		AddTSACertificate: true,
 		Certificates:      []*x509.Certificate{tsaCert}, // add parent certificate
 	}
-	timestampBytes, err := timestamp.CreateResponse(tsuCert, tsuKey, asn1.Marshal)
+	timestampBytes, err := timestamp.CreateResponse(tsuCert, tsuKey)
 	if err != nil {
 		t.Fatalf("unable to generate time stamp response: %s", err.Error())
 	}

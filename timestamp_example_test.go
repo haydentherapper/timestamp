@@ -38,7 +38,7 @@ func ExampleCreateRequest_ParseResponse() {
 		log.Fatal(err)
 	}
 
-	tsResp, err := timestamp.ParseASN1Response(resp)
+	tsResp, err := timestamp.ParseResponse(resp)
 	if err != nil {
 		log.Fatal(err)
 	}

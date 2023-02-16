@@ -195,42 +195,6 @@ func ParseASN1Request(bytes []byte) (*Request, error) {
 	return buildRequest(req)
 }
 
-// ParseResponse parses an Time-Stamp response in DER form containing a
-// TimeStampToken.
-//
-// Invalid signatures or parse failures will result in a ParseError. Error
-// responses will result in a ResponseError.
-func ParseResponse(bytes []byte) (*Timestamp, error) {
-	var err error
-	var rest []byte
-	var resp response
-
-	if rest, err = asn1.Unmarshal(bytes, &resp); err != nil {
-		return nil, err
-	}
-	if len(rest) > 0 {
-		return nil, ParseError("trailing data in Time-Stamp response")
-	}
-
-	if resp.Status.Status > 0 {
-		var fis string
-		fi := resp.Status.FailureInfo()
-		if fi != UnkownFailureInfo {
-			fis = fi.String()
-		}
-		return nil, fmt.Errorf("%s: %s (%v)",
-			resp.Status.Status.String(),
-			strings.Join(resp.Status.StatusString, ","),
-			fis)
-	}
-
-	if len(resp.TimeStampToken.Bytes) == 0 {
-		return nil, ParseError("no pkcs7 data in Time-Stamp response")
-	}
-
-	return Parse(resp.TimeStampToken.FullBytes)
-}
-
 // Marshal marshals the Time-Stamp request to ASN.1 DER encoded form.
 func (req *Request) Marshal() ([]byte, error) {
 	request := request{
@@ -297,12 +261,48 @@ type Timestamp struct {
 	ExtraExtensions []pkix.Extension
 }
 
-// Parse parses an Time-Stamp token in DER form. If the time-stamp contains a
+// ParseResponse parses an Time-Stamp response in DER form containing a
+// TimeStampToken.
+//
+// Invalid signatures or parse failures will result in a ParseError. Error
+// responses will result in a ResponseError.
+func ParseResponse(bytes []byte) (*Timestamp, error) {
+	var err error
+	var rest []byte
+	var resp response
+
+	if rest, err = asn1.Unmarshal(bytes, &resp); err != nil {
+		return nil, err
+	}
+	if len(rest) > 0 {
+		return nil, ParseError("trailing data in Time-Stamp response")
+	}
+
+	if resp.Status.Status > 0 {
+		var fis string
+		fi := resp.Status.FailureInfo()
+		if fi != UnknownFailureInfo {
+			fis = fi.String()
+		}
+		return nil, fmt.Errorf("%s: %s (%v)",
+			resp.Status.Status.String(),
+			strings.Join(resp.Status.StatusString, ","),
+			fis)
+	}
+
+	if len(resp.TimeStampToken.Bytes) == 0 {
+		return nil, ParseError("no pkcs7 data in Time-Stamp response")
+	}
+
+	return Parse(resp.TimeStampToken.FullBytes)
+}
+
+// Parse parses an Time-Stamp in DER form. If the time-stamp contains a
 // certificate then the signature over the response is checked.
 //
 // Invalid signatures or parse failures will result in a ParseError. Error
 // responses will result in a ResponseError.
-func ParseTimestampToken(bytes []byte) (*Timestamp, error) {
+func Parse(bytes []byte) (*Timestamp, error) {
 	var addTSACertificate bool
 	p7, err := pkcs7.Parse(bytes)
 	if err != nil {
