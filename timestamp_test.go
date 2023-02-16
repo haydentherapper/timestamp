@@ -301,7 +301,7 @@ func BenchmarkParseRequest(b *testing.B) {
 	}
 }
 
-func BenchmarkParseASN1Response(b *testing.B) {
+func BenchmarkParseResponse(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		_, _ = ParseResponse(respNonce)
 	}
@@ -326,6 +326,20 @@ func ExampleCreateRequest_customHashingAlgorithm() {
 		})
 	if err != nil {
 		panic(err)
+	}
+}
+
+func TestParseRequestFromJSONInvalidReqFormat(t *testing.T) {
+	createdRequest, err := CreateRequest(strings.NewReader("Content to be time-stamped"), nil)
+	if err != nil {
+		panic(err)
+	}
+	parsed, err := ParseRequestFromJSON(createdRequest)
+	if err == nil {
+		t.Errorf("expected non-nil error due to invalid request foramt")
+	}
+	if parsed != nil {
+		t.Errorf("expected parsed request to be nil due to invalid request format: %v", parsed)
 	}
 }
 
