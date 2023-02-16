@@ -171,7 +171,7 @@ func TestParseResponse(t *testing.T) {
 	}
 }
 
-func TestParseTimestampToken(t *testing.T) {
+func TestParse(t *testing.T) {
 	ts, err := Parse(timeStampToken)
 	if err != nil {
 		t.Errorf("failed to parse timeStampToken: %s", err.Error())
@@ -210,7 +210,6 @@ func TestCreateErrorResponse(t *testing.T) {
 	}
 
 	expected := "the request is rejected:  (the TSA's time source is not available)"
-	
 	_, err = ParseResponse(resp)
 	if err.Error() != expected {
 		t.Errorf("unexpected error message:\n\t%s\nexpected:\n\t%s\n", err.Error(), expected)
@@ -250,8 +249,6 @@ func TestCreateRequest(t *testing.T) {
 			}
 			hashedMsg := h.Sum(nil)
 
-			//  crypto hash: %v", th)
-			// fmt.Println("\n xyz message unhashed: " + msg)
 			req, err := CreateRequest(strings.NewReader(msg), &RequestOptions{
 				Hash:         th,
 				Nonce:        nonce,
@@ -304,7 +301,7 @@ func BenchmarkParseASN1Request(b *testing.B) {
 	}
 }
 
-func BenchmarkASN1EncodingHandlerParseResponse(b *testing.B) {
+func BenchmarkParseASN1Response(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		_, _ = ParseResponse(respNonce)
 	}
@@ -382,7 +379,6 @@ func TestCreateResponseWithNoTSACertificate(t *testing.T) {
 	if err != nil {
 		t.Errorf("unable to generate time stamp response: %s", err.Error())
 	}
-
 	timestampRes, err := ParseResponse(timestampBytes)
 	if err != nil {
 		t.Fatalf("unable to parse time stamp response: %s", err.Error())
@@ -499,7 +495,6 @@ func TestSignWithTSUNoCertificate(t *testing.T) {
 	if err != nil {
 		t.Errorf("unable to generate time stamp response: %s", err.Error())
 	}
-
 	timestampRes, err := ParseResponse(timestampBytes)
 	if err != nil {
 		t.Fatalf("unable to parse time stamp response: %s", err.Error())
