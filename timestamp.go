@@ -611,7 +611,10 @@ func (t *Timestamp) generateSignedData(tstInfo []byte, signer crypto.Signer, cer
 	if err != nil {
 		return nil, err
 	}
-	signedData.SetDigestAlgorithm(pkcs7.OIDDigestAlgorithmSHA256)
+
+	digestAlgOID := getOIDFromHashAlgorithm(t.HashAlgorithm)
+
+	signedData.SetDigestAlgorithm(digestAlgOID)
 	signedData.SetContentType(asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 16, 1, 4})
 
 	signingCertV2Bytes, err := t.populateSigningCertificateV2Ext(certificate)
