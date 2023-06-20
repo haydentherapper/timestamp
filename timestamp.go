@@ -23,8 +23,8 @@ import (
 type FailureInfo int
 
 const (
-	// UnkownFailureInfo mean that no known failure info was provided
-	UnkownFailureInfo FailureInfo = -1
+	// UnknownFailureInfo mean that no known failure info was provided
+	UnknownFailureInfo FailureInfo = -1
 	// BadAlgorithm defines an unrecognized or unsupported Algorithm Identifier
 	BadAlgorithm FailureInfo = 0
 	// BadRequest indicates that the transaction not permitted or supported
@@ -268,7 +268,7 @@ func ParseResponse(bytes []byte) (*Timestamp, error) {
 	if resp.Status.Status > 0 {
 		var fis string
 		fi := resp.Status.FailureInfo()
-		if fi != UnkownFailureInfo {
+		if fi != UnknownFailureInfo {
 			fis = fi.String()
 		}
 		return nil, fmt.Errorf("%s: %s (%v)",
