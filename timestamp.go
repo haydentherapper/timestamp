@@ -166,10 +166,12 @@ func ParseRequest(bytes []byte) (*Request, error) {
 	if len(req.MessageImprint.HashedMessage) == 0 {
 		return nil, ParseError("Time-Stamp request contains no hashed message")
 	}
+
 	hashFunc := getHashAlgorithmFromOID(req.MessageImprint.HashAlgorithm.Algorithm)
 	if hashFunc == crypto.Hash(0) {
 		return nil, ParseError("Time-Stamp request uses unknown hash function")
 	}
+
 	return &Request{
 		HashAlgorithm: hashFunc,
 		HashedMessage: req.MessageImprint.HashedMessage,
