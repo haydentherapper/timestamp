@@ -8,6 +8,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
+	"encoding/json"
 	"fmt"
 	"io"
 	"math/big"
@@ -150,19 +151,7 @@ type Request struct {
 	ExtraExtensions []pkix.Extension
 }
 
-// ParseRequest parses an timestamp request in DER form.
-func ParseRequest(bytes []byte) (*Request, error) {
-	var err error
-	var rest []byte
-	var req request
-
-	if rest, err = asn1.Unmarshal(bytes, &req); err != nil {
-		return nil, err
-	}
-	if len(rest) > 0 {
-		return nil, ParseError("trailing data in Time-Stamp request")
-	}
-
+func buildRequest(req request) (*Request, error) {
 	if len(req.MessageImprint.HashedMessage) == 0 {
 		return nil, ParseError("Time-Stamp request contains no hashed message")
 	}
@@ -180,6 +169,32 @@ func ParseRequest(bytes []byte) (*Request, error) {
 		TSAPolicyOID:  req.ReqPolicy,
 		Extensions:    req.Extensions,
 	}, nil
+}
+
+// ParseRequestFromJSON parses an timestamp request in JSON form.
+func ParseRequestFromJSON(bytes []byte) (*Request, error) {
+	var req request
+
+	if err := json.Unmarshal(bytes, &req); err != nil {
+		return nil, err
+	}
+
+	return buildRequest(req)
+}
+
+// ParseRequest parses an timestamp request in DER form.
+func ParseRequest(bytes []byte) (*Request, error) {
+	var req request
+
+	rest, err := asn1.Unmarshal(bytes, &req)
+	if err != nil {
+		return nil, err
+	}
+	if len(rest) > 0 {
+		return nil, ParseError("trailing data in Time-Stamp request")
+	}
+
+	return buildRequest(req)
 }
 
 // Marshal marshals the Time-Stamp request to ASN.1 DER encoded form.
@@ -597,7 +612,11 @@ func (t *Timestamp) generateSignedData(tstInfo []byte, signer crypto.Signer, cer
 		return nil, err
 	}
 
-	digestAlgOID := getOIDFromHashAlgorithm(t.HashAlgorithm)
+	digestAlgOID, err := pkcs7.GetDigestOIDForSignatureAlgorithm(certificate.SignatureAlgorithm)
+	if err != nil {
+		return nil, err
+	}
+
 	signedData.SetDigestAlgorithm(digestAlgOID)
 	signedData.SetContentType(asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 16, 1, 4})
 
