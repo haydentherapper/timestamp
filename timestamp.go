@@ -553,7 +553,7 @@ func (t *Timestamp) populateSigningCertificateV2Ext(certificate *x509.Certificat
 		return nil, x509.ErrUnsupportedAlgorithm
 	}
 	if t.HashAlgorithm.HashFunc() == crypto.SHA1 {
-		return nil, fmt.Errorf("for SHA1 usae ESSCertID instead of ESSCertIDv2")
+		return nil, fmt.Errorf("for SHA1 use ESSCertID instead of ESSCertIDv2")
 	}
 
 	h := t.HashAlgorithm.HashFunc().New()
@@ -596,7 +596,9 @@ func (t *Timestamp) generateSignedData(tstInfo []byte, signer crypto.Signer, cer
 	if err != nil {
 		return nil, err
 	}
-	signedData.SetDigestAlgorithm(pkcs7.OIDDigestAlgorithmSHA256)
+
+	digestAlgOID := getOIDFromHashAlgorithm(t.HashAlgorithm)
+	signedData.SetDigestAlgorithm(digestAlgOID)
 	signedData.SetContentType(asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 16, 1, 4})
 
 	signingCertV2Bytes, err := t.populateSigningCertificateV2Ext(certificate)
@@ -632,7 +634,7 @@ func (t *Timestamp) generateSignedData(tstInfo []byte, signer crypto.Signer, cer
 	return signature, nil
 }
 
-// copied from cryto/x509 package
+// copied from crypto/x509 package
 // oidNotInExtensions reports whether an extension with the given oid exists in
 // extensions.
 func oidInExtensions(oid asn1.ObjectIdentifier, extensions []pkix.Extension) bool {
